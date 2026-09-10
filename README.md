@@ -1,20 +1,44 @@
-# Supabase PostgreSQL image contract
+# Supabase PostgreSQL Docker Container Image
 
-This image extends `supabase/postgres:17.6.1.136` for the `self-hosted/v0.8.1` component bundle. The base digest is
-pinned in `Dockerfile`. Upstream PostgreSQL, extensions, configuration, migrations and privilege dropping
-remain in place. Wodby adds its operational command interface and a final initialization/import hook.
+[![Build Status](https://github.com/wodby/supabase-postgres/workflows/Build%20docker%20image/badge.svg)](https://github.com/wodby/supabase-postgres/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wodby/supabase-postgres.svg)](https://hub.docker.com/r/wodby/supabase-postgres)
+[![Docker Stars](https://img.shields.io/docker/stars/wodby/supabase-postgres.svg)](https://hub.docker.com/r/wodby/supabase-postgres)
 
-## Image and development
+## Docker Images
 
-Image repository: `wodby/supabase-postgres`. Tags use `17-<release>`, independently of the ordinary PostgreSQL image release cycle. The first planned release is `17-0.1.0`.
+For better reliability, use stability tags (`wodby/supabase-postgres:17-X.X.X`) corresponding to [git tags](https://github.com/wodby/supabase-postgres/releases).
 
-Build and run recovery tests with Wodby CLI 2.10.0, Docker and Python 3 installed:
+Overview:
 
-```sh
-bash scripts/test-supabase-ci.sh
-```
+- Based on the Alpine Linux distribution of [supabase/postgres](https://github.com/supabase/postgres)
+- Pinned upstream image: `supabase/postgres:17.6.1.136`, with its digest recorded in `Dockerfile`
+- Initialization SQL matches the `self-hosted/v0.8.1` component bundle
+- [GitHub Actions builds](https://github.com/wodby/supabase-postgres/actions)
+- [Docker Hub](https://hub.docker.com/r/wodby/supabase-postgres)
 
-CI tests native amd64 and arm64 images on pull requests. The main branch publishes the moving `17` tag, and release tags publish `17-<release>` after both architecture tests pass. Publishing requires `DOCKER_USERNAME` and `DOCKER_PASSWORD` repository or organization secrets.
+[_(Dockerfile)_]: https://github.com/wodby/supabase-postgres/tree/main/Dockerfile
+
+Supported tags and respective `Dockerfile` links:
+
+- `17.6`, `17`, `latest` [_(Dockerfile)_]
+
+All images are built for `linux/amd64` and `linux/arm64`.
+
+Main-branch builds publish the floating tags above. Release builds publish `17.6-X.X.X` and `17-X.X.X` from the tested release-specific architecture images. The image has an independent release cycle from `wodby/postgres`.
+
+Supabase's PostgreSQL extensions, configuration, migrations and privilege dropping remain in place. Wodby adds backup, import and readiness operations. Bundle updates require coordinated initialization and recovery validation; `wodby/images` reports upstream changes for manual review.
+
+## Environment Variables
+
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `POSTGRES_PASSWORD` | | Required; used by Supabase-managed database roles |
+| `JWT_SECRET` | | Required; must match the linked Supabase services |
+| `JWT_EXP` | `3600` | Database JWT expiry setting |
+| `POSTGRES_USER` | `supabase_admin` | Required initialization identity; keep this value |
+| `POSTGRES_DB` | `postgres` | Required initial database; keep this value |
+| `PGDATA` | `/var/lib/postgresql/data` | Required data directory; keep this value |
+| `SUPABASE_IMPORT_ON_INIT` | | Set to `1` by the fresh-volume import workflow |
 
 ## Startup and persistence
 
@@ -30,7 +54,7 @@ Failed initialization or import leaves a pending marker and refuses subsequent n
 volume; do not remove the marker to promote a partially restored database. Existing databases also refuse startup
 when their encryption key is missing. The image is not an in-place conversion of a plain PostgreSQL volume.
 
-## Operations
+## Orchestration Actions
 
 ```sh
 make check-ready host=database max_try=30 wait_seconds=2
@@ -68,7 +92,11 @@ capturing that recovery point. Database import does not restore filesystem/S3 ob
 encryption tokens. Preserve the original encryption tokens required by copied application data; rotate client-facing
 API keys separately when appropriate. A Helm rollback cannot undo database migrations.
 
-## Validation and upstream ownership
+## Development and upstream ownership
+
+Run `bash scripts/test-supabase-ci.sh` with Wodby CLI 2.10.0, Docker and Python 3 installed.
+The workflow builds and tests both architectures before publishing. Configure `DOCKER_USERNAME` and
+`DOCKER_PASSWORD` repository or organization secrets for publication.
 
 `tests/supabase.sh` checks fresh startup, a separate-container backup, read-only init import with a different target
 password, custom roles, RLS, Vault decryption, Auth data, Storage-schema fixture data, exclusions, restart and failed
@@ -77,3 +105,7 @@ object-store acceptance is a separate stack test.
 
 Initialization SQL is adapted from [Supabase self-hosted/v0.8.1](https://github.com/supabase/supabase/tree/self-hosted/v0.8.1/docker/volumes/db),
 commit `8c7a4d9dbbaf8b552893822e89d7bf06f33f9220`. Its license is retained in `supabase/UPSTREAM-LICENSE`.
+
+## Deployment
+
+Use this image with the [Supabase stack](https://github.com/wodby/stack-supabase) on [Wodby](https://wodby.com).

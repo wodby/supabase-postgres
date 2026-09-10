@@ -1,0 +1,83 @@
+name: Build docker image
+
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  POSTGRES17: '17.6'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      pg-versions: ${{ steps.set-matrix.outputs.pg-versions }}
+    steps:
+      - id: set-matrix
+        run: |
+          echo 'pg-versions=[{"version":"${{ env.POSTGRES17 }}","latest":"latest","latest_major":"1"}]' >> "$GITHUB_OUTPUT"
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check release tag selection
+        run: bash tests/release.sh
+  build:
+    needs: [setup, checks]
+    strategy:
+      fail-fast: false
+      matrix:
+        pg: ${{ fromJson(needs.setup.outputs.pg-versions) }}
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      POSTGRES_VER: ${{ matrix.pg.version }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Wodby CLI
+        run: |
+          curl --fail --location "https://github.com/wodby/wodby-cli/releases/download/2.10.0/wodby-linux-${ARCH}.tar.gz" | sudo tar xz -C /usr/local/bin wodby
+      - name: Select stability tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "STABILITY_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+          fi
+      - name: Build and test
+        run: bash scripts/test-supabase-ci.sh
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push tested architecture
+        if: github.event_name == 'push'
+        run: make push
+  push:
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        pg: ${{ fromJson(needs.setup.outputs.pg-versions) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: ./.github/actions
+        with:
+          version: ${{ matrix.pg.version }}
+          latest: ${{ matrix.pg.latest }}
+          latest_major: ${{ matrix.pg.latest_major }}

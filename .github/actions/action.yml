@@ -1,0 +1,22 @@
+name: push
+description: Combine tested architectures and publish image tags
+inputs:
+  version:
+    description: PostgreSQL minor version in the pinned Supabase bundle
+    required: true
+  latest:
+    description: Optional floating alias
+    required: false
+  latest_major:
+    description: Whether to publish the major version tag
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Push image manifests
+      env:
+        POSTGRES_VER: ${{ inputs.version }}
+        LATEST_ALIAS: ${{ inputs.latest }}
+        LATEST_MAJOR: ${{ inputs.latest_major }}
+      run: bash "$GITHUB_ACTION_PATH/release.sh"
+      shell: bash
