@@ -2,8 +2,9 @@
 set -euo pipefail
 # Wodby CLI supplies the workspace; a Docker CLI container builds against the host daemon.
 cd "$(dirname "$0")/.."
-export IMAGE=${IMAGE:-wodby/supabase-postgres:17-test}
-case "$IMAGE" in wodby/supabase-postgres:*) ;; *) echo 'IMAGE must use the wodby/supabase-postgres repository' >&2; exit 1;; esac
+export POSTGRES_VER=${POSTGRES_VER:-17.6}
+export ARCH=${ARCH:-}
+export STABILITY_TAG=${STABILITY_TAG:-}
 command -v wodby >/dev/null
 config_dir=$(mktemp -d)
 config="$config_dir/config.json"
@@ -22,5 +23,5 @@ with open(sys.argv[1],'w') as output:
     json.dump({'context':sys.argv[2],'dataContainer':sys.argv[3],'workingDir':'/workspace'},output)
 PY
 wodby ci run --ci-config-path "$config" -i docker:29-cli -u root -p . --entrypoint /bin/sh --no-cache \
-    -v /var/run/docker.sock:/var/run/docker.sock -e "IMAGE=$IMAGE" -- -ec \
-    'apk add --no-cache make bash python3 >/dev/null; make TAG="${IMAGE#wodby/supabase-postgres:}" build test'
+    -v /var/run/docker.sock:/var/run/docker.sock -e "POSTGRES_VER=$POSTGRES_VER" -e "ARCH=$ARCH" -e "STABILITY_TAG=$STABILITY_TAG" -- -ec \
+    'apk add --no-cache make bash python3 >/dev/null; make build test'
