@@ -2,7 +2,10 @@ ARG SUPABASE_IMAGE=supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e
 FROM ${SUPABASE_IMAGE}
 
 USER root
-RUN apk add --no-cache make python3 && \
+# Upgrade inherited packages even when their existing versions satisfy dependencies.
+RUN set -ex; \
+    apk upgrade --no-cache; \
+    apk add --no-cache make python3 && \
     test ! -e /etc/postgresql-custom/pgsodium_root.key && \
     ln -s /var/lib/postgresql/wodby-keys/pgsodium_root.key /etc/postgresql-custom/pgsodium_root.key
 COPY supabase/init-scripts/ /docker-entrypoint-initdb.d/init-scripts/
