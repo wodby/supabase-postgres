@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "image": "wodby/supabase-postgres",
+  "versions": [
+    {
+      "version": {
+        "file": "Dockerfile",
+        "pattern": "^ARG SUPABASE_IMAGE=supabase/postgres:([0-9.]+)@sha256:"
+      },
+      "variants": [
+        {
+          "short": [
+            "{minor}",
+            "{major}"
+          ],
+          "full": "{version}"
+        }
+      ]
+    }
+  ]
+}

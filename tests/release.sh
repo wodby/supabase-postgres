@@ -15,16 +15,22 @@ check_release() {
 }
 check_release refs/pull/2/merge ''
 check_release refs/heads/feature/example ''
-check_release refs/heads/main 'buildx-imagetools-create TAG=17 STABILITY_TAG= IMAGETOOLS_TAG=17.6
-buildx-imagetools-create TAG=17 STABILITY_TAG= IMAGETOOLS_TAG=17
-buildx-imagetools-create TAG=17 STABILITY_TAG= IMAGETOOLS_TAG=latest'
-check_release refs/tags/0.1.0 'buildx-imagetools-create TAG=17 STABILITY_TAG=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0
-buildx-imagetools-create TAG=17 STABILITY_TAG=0.1.0 IMAGETOOLS_TAG=17-0.1.0'
+check_release refs/heads/main 'buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=17.6
+buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=17
+buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=latest'
+check_release refs/tags/0.1.0 'buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0
+buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17-0.1.0'
+check_release refs/tags/r23 'buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.6-r23
+buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17-r23'
 # Verify release manifests consume immutable architecture tags, matching the build and push targets.
 unset -f make
-result=$(make -n buildx-imagetools-create TAG=17 STABILITY_TAG=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0)
+result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0)
 [[ "$result" == *'supabase-postgres:17.6-0.1.0'* ]]
 [[ "$result" == *'wodby/supabase-postgres:17-0.1.0-amd64 wodby/supabase-postgres:17-0.1.0-arm64'* ]]
+[[ $(make -n push ARCH=arm64 IMAGE_REVISION=0.1.0) == 'docker push wodby/supabase-postgres:17-0.1.0-arm64' ]]
+result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.6-r23)
+[[ "$result" == *'wodby/supabase-postgres:17-r23-amd64 wodby/supabase-postgres:17-r23-arm64'* ]]
+[[ $(make -n push ARCH=arm64 IMAGE_REVISION=r23) == 'docker push wodby/supabase-postgres:17-r23-arm64' ]]
 [[ $(make -n push ARCH=arm64 STABILITY_TAG=0.1.0) == 'docker push wodby/supabase-postgres:17-0.1.0-arm64' ]]
 make check-version
 if make check-version POSTGRES_VER=18.6 >/dev/null 2>&1; then

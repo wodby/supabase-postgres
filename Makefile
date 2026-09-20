@@ -1,13 +1,16 @@
 -include env_make
 
+# Accept legacy build arguments during the image revision transition.
+IMAGE_REVISION ?= $(STABILITY_TAG)
+
 REPO = wodby/supabase-postgres
 POSTGRES_VER ?= 17.6
 POSTGRES_MAJOR_VER = $(word 1,$(subst ., ,$(POSTGRES_VER)))
 TAG ?= $(POSTGRES_MAJOR_VER)
 PLATFORM ?= linux/arm64
 
-ifneq ($(STABILITY_TAG),)
-    override TAG := $(TAG)-$(STABILITY_TAG)
+ifneq ($(IMAGE_REVISION),)
+    override TAG := $(TAG)-$(IMAGE_REVISION)
 endif
 IMAGETOOLS_TAG ?= $(TAG)
 ifneq ($(ARCH),)
