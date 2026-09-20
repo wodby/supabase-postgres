@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 export POSTGRES_VER=${POSTGRES_VER:-17.6}
 export ARCH=${ARCH:-}
 export STABILITY_TAG=${STABILITY_TAG:-}
+export IMAGE_REVISION=${IMAGE_REVISION:-${STABILITY_TAG}}
 command -v wodby >/dev/null
 config_dir=$(mktemp -d)
 config="$config_dir/config.json"
@@ -23,5 +24,5 @@ with open(sys.argv[1],'w') as output:
     json.dump({'context':sys.argv[2],'dataContainer':sys.argv[3],'workingDir':'/workspace'},output)
 PY
 wodby ci run --ci-config-path "$config" -i docker:29-cli -u root -p . --entrypoint /bin/sh --no-cache \
-    -v /var/run/docker.sock:/var/run/docker.sock -e "POSTGRES_VER=$POSTGRES_VER" -e "ARCH=$ARCH" -e "STABILITY_TAG=$STABILITY_TAG" -- -ec \
+    -v /var/run/docker.sock:/var/run/docker.sock -e "POSTGRES_VER=$POSTGRES_VER" -e "ARCH=$ARCH" -e "STABILITY_TAG=$STABILITY_TAG" -e "IMAGE_REVISION=$IMAGE_REVISION" -- -ec \
     'apk add --no-cache make bash python3 >/dev/null; make build test'

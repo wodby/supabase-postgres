@@ -26,7 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Check release tag selection
-        run: bash tests/release.sh
+        run: |
+          bash tests/release.sh
+          bash tests/ci-image-ref.sh
   build:
     needs: [setup, checks]
     strategy:
