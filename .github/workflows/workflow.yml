@@ -48,10 +48,10 @@ jobs:
       - name: Install Wodby CLI
         run: |
           curl --fail --location "https://github.com/wodby/wodby-cli/releases/download/2.10.0/wodby-linux-${ARCH}.tar.gz" | sudo tar xz -C /usr/local/bin wodby
-      - name: Select stability tag
+      - name: Select image revision
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            echo "STABILITY_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+            echo "IMAGE_REVISION=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
           fi
       - name: Build and test
         id: build-image
