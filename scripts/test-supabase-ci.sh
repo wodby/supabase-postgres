@@ -2,7 +2,7 @@
 set -euo pipefail
 # Wodby CLI supplies the workspace; a Docker CLI container builds against the host daemon.
 cd "$(dirname "$0")/.."
-export POSTGRES_VER=${POSTGRES_VER:-17.6}
+export POSTGRES_VER=${POSTGRES_VER:-17.11}
 export ARCH=${ARCH:-}
 export STABILITY_TAG=${STABILITY_TAG:-}
 export IMAGE_REVISION=${IMAGE_REVISION:-${STABILITY_TAG}}

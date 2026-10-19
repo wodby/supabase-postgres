@@ -1,0 +1,24 @@
+# Keep accepted findings visible in scan reports.
+show-suppressed: true
+
+# supabase/postgres installs its runtime libraries through Nix. These exact
+# versions live in the upstream Nix store and cannot be upgraded by this image's
+# Alpine package step; they change only when the pinned upstream bundle changes.
+# PostgreSQL itself and everything outside the Nix store stay gated. Review and
+# remove these exceptions whenever the Dockerfile pin moves; do not extend them
+# to other packages or versions without review.
+ignore:
+  - package: {name: openssl, version: 3.0.13, location: '/nix/store/**'}
+  - package: {name: openssl, version: 3.6.0, location: '/nix/store/**'}
+  - package: {name: openssl, version: 3.6.1, location: '/nix/store/**'}
+  - package: {name: krb5, version: 1.21.2, location: '/nix/store/**'}
+  - package: {name: libarchive, version: 3.8.4, location: '/nix/store/**'}
+  - package: {name: libcap, version: '2.77', location: '/nix/store/**'}
+  - package: {name: libgit2, version: 1.9.2, location: '/nix/store/**'}
+  - package: {name: nghttp2, version: 1.60.0, location: '/nix/store/**'}
+  - package: {name: nghttp2, version: 1.67.1, location: '/nix/store/**'}
+  - package: {name: perl, version: 5.42.0, location: '/nix/store/**'}
+  # PostGIS fixes this only in a 3.7 beta; the bundle ships the 3.3 extension.
+  - package: {name: postgis, version: 3.3.7, location: '/nix/store/**'}
+  - package: {name: sqlite, version: 3.50.4, location: '/nix/store/**'}
+  - package: {name: sqlite, version: 3.51.1, location: '/nix/store/**'}
