@@ -10,25 +10,25 @@ export -f make
 check_release() {
     local ref=$1 expected=$2
     : > "$RELEASE_TEST_LOG"
-    GITHUB_REF="$ref" POSTGRES_VER=17.6 LATEST_ALIAS=latest LATEST_MAJOR=1 bash .github/actions/release.sh
+    GITHUB_REF="$ref" POSTGRES_VER=17.11 LATEST_ALIAS=latest LATEST_MAJOR=1 bash .github/actions/release.sh
     [[ $(cat "$RELEASE_TEST_LOG") == "$expected" ]]
 }
 check_release refs/pull/2/merge ''
 check_release refs/heads/feature/example ''
-check_release refs/heads/main 'buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=17.6
+check_release refs/heads/main 'buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=17.11
 buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=17
 buildx-imagetools-create TAG=17 IMAGE_REVISION= IMAGETOOLS_TAG=latest'
-check_release refs/tags/0.1.0 'buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0
+check_release refs/tags/0.1.0 'buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.11-0.1.0
 buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17-0.1.0'
-check_release refs/tags/r23 'buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.6-r23
+check_release refs/tags/r23 'buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.11-r23
 buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17-r23'
 # Verify release manifests consume immutable architecture tags, matching the build and push targets.
 unset -f make
-result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.6-0.1.0)
-[[ "$result" == *'supabase-postgres:17.6-0.1.0'* ]]
+result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=0.1.0 IMAGETOOLS_TAG=17.11-0.1.0)
+[[ "$result" == *'supabase-postgres:17.11-0.1.0'* ]]
 [[ "$result" == *'wodby/supabase-postgres:17-0.1.0-amd64 wodby/supabase-postgres:17-0.1.0-arm64'* ]]
 [[ $(make -n push ARCH=arm64 IMAGE_REVISION=0.1.0) == 'docker push wodby/supabase-postgres:17-0.1.0-arm64' ]]
-result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.6-r23)
+result=$(make -n buildx-imagetools-create TAG=17 IMAGE_REVISION=r23 IMAGETOOLS_TAG=17.11-r23)
 [[ "$result" == *'wodby/supabase-postgres:17-r23-amd64 wodby/supabase-postgres:17-r23-arm64'* ]]
 [[ $(make -n push ARCH=arm64 IMAGE_REVISION=r23) == 'docker push wodby/supabase-postgres:17-r23-arm64' ]]
 [[ $(make -n push ARCH=arm64 STABILITY_TAG=0.1.0) == 'docker push wodby/supabase-postgres:17-0.1.0-arm64' ]]

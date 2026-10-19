@@ -24,15 +24,15 @@ MOCK
 chmod +x "$test_dir/docker" "$test_dir/wodby"
 check() {
     local revision=$1 legacy=$2 expected actual
-    expected=$(IMAGE_REVISION="$revision" STABILITY_TAG="$legacy" ARCH=amd64 POSTGRES_VER=17.6 make --no-print-directory -s image-ref)
-    actual=$(PATH="$test_dir:$PATH" IMAGE_REVISION="$revision" STABILITY_TAG="$legacy" ARCH=amd64 POSTGRES_VER=17.6 bash scripts/test-supabase-ci.sh)
+    expected=$(IMAGE_REVISION="$revision" STABILITY_TAG="$legacy" ARCH=amd64 POSTGRES_VER=17.11 make --no-print-directory -s image-ref)
+    actual=$(PATH="$test_dir:$PATH" IMAGE_REVISION="$revision" STABILITY_TAG="$legacy" ARCH=amd64 POSTGRES_VER=17.11 bash scripts/test-supabase-ci.sh)
     [[ "$actual" == "$expected" ]] || { printf 'Expected %s, got %s\n' "$expected" "$actual" >&2; exit 1; }
 }
 check '' ''
 check r0 ''
 check r23 9.8.7
 # Leave IMAGE_REVISION unset to exercise the legacy Makefile fallback.
-expected=$(env -u IMAGE_REVISION STABILITY_TAG=9.8.7 ARCH=amd64 POSTGRES_VER=17.6 make --no-print-directory -s image-ref)
-actual=$(env -u IMAGE_REVISION PATH="$test_dir:$PATH" STABILITY_TAG=9.8.7 ARCH=amd64 POSTGRES_VER=17.6 bash scripts/test-supabase-ci.sh)
+expected=$(env -u IMAGE_REVISION STABILITY_TAG=9.8.7 ARCH=amd64 POSTGRES_VER=17.11 make --no-print-directory -s image-ref)
+actual=$(env -u IMAGE_REVISION PATH="$test_dir:$PATH" STABILITY_TAG=9.8.7 ARCH=amd64 POSTGRES_VER=17.11 bash scripts/test-supabase-ci.sh)
 [[ "$actual" == "$expected" ]]
 printf '%s\n' 'CI build references match scan/push references'

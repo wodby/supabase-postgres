@@ -21,7 +21,7 @@ COMPLETE = ROOT / '.wodby-import-complete'
 IMPORT = Path('/wodby/import')
 STAGE = ROOT / 'wodby-import'
 FORMAT = 'wodby-supabase-v1'
-BASE = '17.6.1.136'
+BASE = '17.11.0.004'
 
 
 def run(args, *, capture=False, database=None, text=None):

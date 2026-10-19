@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  POSTGRES17: '17.6'
+  POSTGRES17: '17.11'
 
 jobs:
   setup:

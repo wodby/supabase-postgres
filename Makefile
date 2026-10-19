@@ -4,7 +4,7 @@
 IMAGE_REVISION ?= $(STABILITY_TAG)
 
 REPO = wodby/supabase-postgres
-POSTGRES_VER ?= 17.6
+POSTGRES_VER ?= 17.11
 POSTGRES_MAJOR_VER = $(word 1,$(subst ., ,$(POSTGRES_VER)))
 TAG ?= $(POSTGRES_MAJOR_VER)
 PLATFORM ?= linux/arm64

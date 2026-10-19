@@ -8,7 +8,7 @@
 
 Use image revision tags such as `wodby/supabase-postgres:17-rN` to select a Wodby image revision.
 Major and minor tags use the repository release number, starting at `r0`. Full-version tags such as
-`wodby/supabase-postgres:17.6.1.136-r0` start at `r0` for each exact upstream version.
+`wodby/supabase-postgres:17.11.0.004-r0` start at `r0` for each exact upstream version.
 Every published versioned revision tag has a matching annotated Git tag pointing to its release commit.
 Existing tags remain available after support for their major or minor version ends.
 See [release tags](https://github.com/wodby/supabase-postgres/tags) for available revisions and the [image revision policy](https://github.com/wodby/images#image-revisions) for upgrade guidance.
@@ -17,7 +17,7 @@ Previously published image tags remain available.
 Overview:
 
 - Based on the Alpine Linux distribution of [supabase/postgres](https://github.com/supabase/postgres)
-- Pinned upstream image: `supabase/postgres:17.6.1.136`, with its digest recorded in `Dockerfile`
+- Pinned upstream image: `supabase/postgres:17.11.0.004`, with its digest recorded in `Dockerfile`
 - Initialization SQL matches the `self-hosted/v0.8.1` component bundle
 - [GitHub Actions builds](https://github.com/wodby/supabase-postgres/actions)
 - [Docker Hub](https://hub.docker.com/r/wodby/supabase-postgres)
@@ -26,11 +26,11 @@ Overview:
 
 Supported tags and respective `Dockerfile` links:
 
-- `17.6`, `17`, `latest` [_(Dockerfile)_]
+- `17.11`, `17`, `latest` [_(Dockerfile)_]
 
 All images are built for `linux/amd64` and `linux/arm64`.
 
-Main-branch builds publish the floating tags above. Release builds publish `17.6-rN` and `17-rN` from the tested release-specific architecture images. The image has an independent release cycle from `wodby/postgres`.
+Main-branch builds publish the floating tags above. Release builds publish `17.11-rN` and `17-rN` from the tested release-specific architecture images. The image has an independent release cycle from `wodby/postgres`.
 
 Supabase's PostgreSQL extensions, configuration, migrations and privilege dropping remain in place. Wodby adds backup, import and readiness operations. Bundle updates require coordinated initialization and recovery validation; `wodby/images` reports upstream changes for manual review.
 
