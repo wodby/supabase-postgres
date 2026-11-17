@@ -15,6 +15,7 @@ ignore:
   - package: {name: libarchive, version: 3.8.4, location: '/nix/store/**'}
   - package: {name: libcap, version: '2.77', location: '/nix/store/**'}
   - package: {name: libgit2, version: 1.9.2, location: '/nix/store/**'}
+  - package: {name: libtiff, version: 4.7.1, location: '/nix/store/**'}
   - package: {name: nghttp2, version: 1.60.0, location: '/nix/store/**'}
   - package: {name: nghttp2, version: 1.67.1, location: '/nix/store/**'}
   - package: {name: perl, version: 5.42.0, location: '/nix/store/**'}
