@@ -88,6 +88,8 @@ Before starting PostgreSQL, the wrapper validates every backup file and installs
 initialization, the final hook restores roles and every database through the temporary Unix-socket server. TCP
 connections become available only after successful import. The built-in service logins are reset to the target
 `POSTGRES_PASSWORD`; custom role passwords are preserved. Database JWT settings follow the target `JWT_SECRET`.
+Schemas that initialization creates with default grants, such as `graphql` and `graphql_public`, are kept rather than
+recreated, so the API roles keep their access and any grant changes saved in the backup apply on top.
 An unchanged import mount is safe across restart; it is not replayed against the existing database.
 
 `make import source=/path/to/extracted-bundle host=/var/run/postgresql` is restricted to fresh initialization;
