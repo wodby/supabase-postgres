@@ -39,7 +39,7 @@ query() {
 }
 start_db "$source_container" "${volumes[0]}" "$source_password"
 wait_db "$source_container" "$source_password"
-query "$source_container" "$source_password" "CREATE TABLE public.wodby_recovery(id integer PRIMARY KEY, value text); INSERT INTO public.wodby_recovery VALUES(1,'retained'); CREATE TABLE public.wodby_excluded(id integer); INSERT INTO public.wodby_excluded VALUES(1); CREATE ROLE wodby_owner LOGIN PASSWORD 'custom_role_password'; ALTER TABLE public.wodby_recovery OWNER TO wodby_owner; ALTER TABLE public.wodby_recovery ENABLE ROW LEVEL SECURITY; GRANT SELECT ON public.wodby_recovery TO anon,authenticated; CREATE POLICY authenticated_read ON public.wodby_recovery TO authenticated USING(true); SELECT vault.create_secret('recovery_secret','wodby_recovery'); INSERT INTO auth.users(id,email) VALUES('00000000-0000-0000-0000-000000000001','recovery@example.test'); CREATE TABLE storage.wodby_metadata(id text PRIMARY KEY); INSERT INTO storage.wodby_metadata VALUES('recovery');" >/dev/null
+query "$source_container" "$source_password" "CREATE TABLE public.wodby_recovery(id integer PRIMARY KEY, value text); INSERT INTO public.wodby_recovery VALUES(1,'retained'); CREATE TABLE public.wodby_excluded(id integer); INSERT INTO public.wodby_excluded VALUES(1); CREATE ROLE wodby_owner LOGIN PASSWORD 'custom_role_password'; ALTER TABLE public.wodby_recovery OWNER TO wodby_owner; ALTER TABLE public.wodby_recovery ENABLE ROW LEVEL SECURITY; GRANT SELECT ON public.wodby_recovery TO anon,authenticated; CREATE POLICY authenticated_read ON public.wodby_recovery TO authenticated USING(true); SELECT vault.create_secret('recovery_secret','wodby_recovery'); INSERT INTO auth.users(id,email) VALUES('00000000-0000-0000-0000-000000000001','recovery@example.test'); CREATE TABLE storage.wodby_metadata(id text PRIMARY KEY); INSERT INTO storage.wodby_metadata VALUES('recovery'); GRANT USAGE ON SCHEMA graphql_public TO wodby_owner; REVOKE USAGE ON SCHEMA graphql FROM anon;" >/dev/null
 query "$source_container" "$source_password" "CREATE TABLE public.wodby_internal(id integer); INSERT INTO public.wodby_internal VALUES(42)" _supabase >/dev/null
 key_before=$(docker exec "$source_container" sha256sum /etc/postgresql-custom/pgsodium_root.key | cut -d' ' -f1)
 # A separate operational container has the same volume/remote-host contract as the service backup job.
@@ -56,6 +56,10 @@ wait_db "$target_container" "$target_password"
 [[ $(query "$target_container" "$target_password" 'SELECT id FROM public.wodby_internal' _supabase) == 42 ]]
 [[ $(query "$target_container" "$target_password" "SELECT email FROM auth.users WHERE id='00000000-0000-0000-0000-000000000001'") == recovery@example.test ]]
 [[ $(query "$target_container" "$target_password" "SELECT count(*) FROM storage.wodby_metadata WHERE id='recovery'") == 1 ]]
+# Schemas created by initialization keep their initial grants, and the backup's changes to them apply on top.
+[[ $(query "$target_container" "$target_password" "SELECT has_schema_privilege('anon','graphql_public','USAGE') AND has_schema_privilege('authenticated','graphql_public','USAGE') AND has_schema_privilege('service_role','graphql','USAGE')") == t ]]
+[[ $(query "$target_container" "$target_password" "SELECT has_schema_privilege('anon','graphql','USAGE')") == f ]]
+[[ $(query "$target_container" "$target_password" "SELECT has_schema_privilege('wodby_owner','graphql_public','USAGE')") == t ]]
 [[ $(query "$target_container" "$target_password" 'SET ROLE anon; SELECT count(*) FROM public.wodby_recovery' | tail -1) == 0 ]]
 [[ $(query "$target_container" "$target_password" 'SET ROLE authenticated; SELECT count(*) FROM public.wodby_recovery' | tail -1) == 1 ]]
 [[ $(docker exec "$target_container" sha256sum /etc/postgresql-custom/pgsodium_root.key | cut -d' ' -f1) == "$key_before" ]]
@@ -83,4 +87,4 @@ start_db "$prefix-bad" "${volumes[3]}" "$target_password" --mount "type=volume,s
 docker start "$prefix-bad" >/dev/null
 [[ $(docker wait "$prefix-bad") != 0 ]]
 docker logs "$prefix-bad" 2>&1 | tail -3 | grep -q 'Previous initialization or import failed'
-echo 'Supabase fresh startup, backup, import, roles, RLS, Vault, Auth and Storage schema data, exclusions and restart checks passed.'
+echo 'Supabase fresh startup, backup, import, roles, schema grants, RLS, Vault, Auth and Storage schema data, exclusions and restart checks passed.'

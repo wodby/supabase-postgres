@@ -149,6 +149,41 @@ def backup():
     print('Backup prepared. Save matching application tokens and storage objects separately.')
 
 
+def initial_privilege_schemas(database):
+    """Schemas the fresh database created with recorded initial privileges outside any extension.
+
+    Supabase's initialization records the grants on schemas such as graphql and graphql_public as
+    extension initial privileges without the schemas being extension members. pg_dump therefore
+    writes only changes relative to those privileges and expects the restore target to keep them.
+    """
+    rows = sql("""SELECT n.nspname FROM pg_namespace n
+JOIN pg_init_privs i ON i.classoid = 'pg_namespace'::regclass AND i.objoid = n.oid AND i.objsubid = 0
+WHERE i.privtype = 'e' AND NOT EXISTS (
+    SELECT FROM pg_depend d WHERE d.classid = 'pg_namespace'::regclass AND d.objid = n.oid AND d.deptype = 'e')
+ORDER BY 1""", database=database)
+    return set(rows.splitlines())
+
+
+def restore_list(dump, database):
+    """Restore every archive entry except the creation of schemas the fresh database already owns.
+
+    With --clean, recreating such a schema would drop its initial privileges, and the archive holds
+    no grant to bring them back. Keeping the existing schema lets the archive's privilege changes
+    apply on top of the initial privileges, as pg_dump intends.
+    """
+    keep = initial_privilege_schemas(database)
+    listing = run(['pg_restore', '--list', str(dump)], capture=True)
+    entries = []
+    for line in listing.splitlines():
+        fields = line.split()
+        if (not line.startswith(';') and len(fields) >= 6 and fields[3] == 'SCHEMA' and fields[4] == '-'
+                and fields[5] in keep):
+            print(f'Keeping existing schema {fields[5]} and its initial privileges', flush=True)
+            continue
+        entries.append(line)
+    return '\n'.join(entries) + '\n'
+
+
 def restore(directory):
     """Restore only during fresh initialization, before the database accepts TCP connections."""
     if not PENDING.exists() or os.environ.get('PGHOST') != '/var/run/postgresql':
@@ -164,7 +199,12 @@ def restore(directory):
         if create.strip():
             sql(create, database='template1')
         connection = "dbname='" + name.replace('\\', '\\\\').replace("'", "\\'") + "'"
-        run(['pg_restore', '--dbname=' + connection, '--clean', '--if-exists', '--exit-on-error', str(directory / f'db-{i}.dump')], database=name)
+        dump = directory / f'db-{i}.dump'
+        with tempfile.NamedTemporaryFile('w', prefix='supabase-restore-list-') as listing:
+            listing.write(restore_list(dump, name))
+            listing.flush()
+            run(['pg_restore', '--dbname=' + connection, '--clean', '--if-exists', '--exit-on-error',
+                 '--use-list=' + listing.name, str(dump)], database=name)
     # Supabase-owned logins must agree with this environment's configured password after import.
     sql(file=Path('/docker-entrypoint-initdb.d/init-scripts/99-roles.sql'))
     run(['psql', '--no-psqlrc', '--no-password', '-v', 'ON_ERROR_STOP=1'], text=r"""\getenv pgpass POSTGRES_PASSWORD
