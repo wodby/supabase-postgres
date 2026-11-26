@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  POSTGRES17: '17.11'
+  POSTGRES17: '17.12'
 
 jobs:
   setup:

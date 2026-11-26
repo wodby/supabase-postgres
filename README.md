@@ -8,7 +8,7 @@
 
 Use image revision tags such as `wodby/supabase-postgres:17-rN` to select a Wodby image revision.
 Major and minor tags use the repository release number, starting at `r0`. Full-version tags such as
-`wodby/supabase-postgres:17.11.0.004-r0` start at `r0` for each exact upstream version.
+`wodby/supabase-postgres:17.12.0.005-r0` start at `r0` for each exact upstream version.
 Every published versioned revision tag has a matching annotated Git tag pointing to its release commit.
 Existing tags remain available after support for their major or minor version ends.
 See [release tags](https://github.com/wodby/supabase-postgres/tags) for available revisions and the [image revision policy](https://github.com/wodby/images#image-revisions) for upgrade guidance.
@@ -17,7 +17,7 @@ Previously published image tags remain available.
 Overview:
 
 - Based on the Alpine Linux distribution of [supabase/postgres](https://github.com/supabase/postgres)
-- Pinned upstream image: `supabase/postgres:17.11.0.004`, with its digest recorded in `Dockerfile`
+- Pinned upstream image: `supabase/postgres:17.12.0.005`, with its digest recorded in `Dockerfile`
 - Initialization SQL matches the `self-hosted/v0.8.1` component bundle
 - [GitHub Actions builds](https://github.com/wodby/supabase-postgres/actions)
 - [Docker Hub](https://hub.docker.com/r/wodby/supabase-postgres)
@@ -26,11 +26,11 @@ Overview:
 
 Supported tags and respective `Dockerfile` links:
 
-- `17.11`, `17`, `latest` [_(Dockerfile)_]
+- `17.12`, `17`, `latest` [_(Dockerfile)_]
 
 All images are built for `linux/amd64` and `linux/arm64`.
 
-Main-branch builds publish the floating tags above. Release builds publish `17.11-rN` and `17-rN` from the tested release-specific architecture images. The image has an independent release cycle from `wodby/postgres`.
+Main-branch builds publish the floating tags above. Release builds publish `17.12-rN` and `17-rN` from the tested release-specific architecture images. The image has an independent release cycle from `wodby/postgres`.
 
 Supabase's PostgreSQL extensions, configuration, migrations and privilege dropping remain in place. Wodby adds backup, import and readiness operations. Bundle updates require coordinated initialization and recovery validation; `wodby/images` reports upstream changes for manual review.
 
@@ -81,8 +81,8 @@ store and transfer them through protected storage.
 
 The service import workflow extracts a `.tar.gz` or `.tgz` backup into a read-only `/wodby/import` mount and sets
 `SUPABASE_IMPORT_ON_INIT=1` on a fresh replacement volume. Import supports only this image's checksummed backup
-format from the exact same upstream bundle. Ordinary SQL dumps and backups from other bundles need a separate
-migration procedure.
+format, made by the same upstream bundle or by an earlier bundle listed as importable in `supabase/ops.py`
+(currently `17.11.0.004`). Ordinary SQL dumps and backups from other bundles need a separate migration procedure.
 
 Before starting PostgreSQL, the wrapper validates every backup file and installs the saved root key. After upstream
 initialization, the final hook restores roles and every database through the temporary Unix-socket server. TCP
@@ -108,7 +108,8 @@ The workflow builds and tests both architectures before publishing. Configure `D
 
 `tests/supabase.sh` checks fresh startup, a separate-container backup, read-only init import with a different target
 password, custom roles, RLS, Vault decryption, Auth data, Storage-schema fixture data, exclusions, restart and failed
-restore recovery. The Supabase workflow runs it on both amd64 and arm64 through Wodby CLI. Full application API and
+restore recovery. `make test` runs it twice: once with a backup from the built image, and once with a backup from
+the previous bundle's published image. The Supabase workflow runs it on both amd64 and arm64 through Wodby CLI. Full application API and
 object-store acceptance is a separate stack test.
 
 Initialization SQL is adapted from [Supabase self-hosted/v0.8.1](https://github.com/supabase/supabase/tree/self-hosted/v0.8.1/docker/volumes/db),

@@ -4,7 +4,7 @@
 IMAGE_REVISION ?= $(STABILITY_TAG)
 
 REPO = wodby/supabase-postgres
-POSTGRES_VER ?= 17.11
+POSTGRES_VER ?= 17.12
 POSTGRES_MAJOR_VER = $(word 1,$(subst ., ,$(POSTGRES_VER)))
 TAG ?= $(POSTGRES_MAJOR_VER)
 PLATFORM ?= linux/arm64
@@ -37,8 +37,12 @@ buildx-imagetools-create:
 	docker buildx imagetools create -t $(REPO):$(IMAGETOOLS_TAG) \
 		$(call arch-image,$(REPO):$(TAG)-amd64) $(call arch-image,$(REPO):$(TAG)-arm64)
 
+# Published image of the previous bundle; its backups must keep importing into this one.
+PREVIOUS_BUNDLE_IMAGE ?= wodby/supabase-postgres:17.11-r1@sha256:45e07b42af97fd30c4ea06c11e8a7b7c7626f9d94a623e3f354ebf8d2a5cbd0a
+
 test:
 	IMAGE=$(REPO):$(TAG) bash tests/supabase.sh
+	IMAGE=$(REPO):$(TAG) SOURCE_IMAGE=$(PREVIOUS_BUNDLE_IMAGE) bash tests/supabase.sh
 
 push:
 	docker push $(REPO):$(TAG)

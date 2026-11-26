@@ -21,7 +21,10 @@ COMPLETE = ROOT / '.wodby-import-complete'
 IMPORT = Path('/wodby/import')
 STAGE = ROOT / 'wodby-import'
 FORMAT = 'wodby-supabase-v1'
-BASE = '17.11.0.004'
+BASE = '17.12.0.005'
+# Bundles whose backups import into this one. A bundle is listed only after a backup from it was
+# imported into this bundle and checked, because restores keep the source bundle's schema objects.
+IMPORTABLE_BASES = {'17.11.0.004', BASE}
 
 
 def run(args, *, capture=False, database=None, text=None):
@@ -52,8 +55,8 @@ def validate(directory):
     data = json.loads(manifest.read_text())
     if not isinstance(data, dict) or not isinstance(data.get('files'), dict):
         raise ValueError('Invalid backup manifest')
-    if data.get('format') != FORMAT or data.get('base') != BASE:
-        raise ValueError('Import requires a backup from the same Supabase PostgreSQL bundle')
+    if data.get('format') != FORMAT or data.get('base') not in IMPORTABLE_BASES:
+        raise ValueError('Import requires a backup from a compatible Supabase PostgreSQL bundle')
     databases = data.get('databases')
     if (not isinstance(databases, list) or not databases or
             any(not isinstance(n, str) or not n or '\x00' in n for n in databases) or
